@@ -1,3 +1,7 @@
-/**
- * Created by vladimir on 1/10/15.
- */
+
+var cotent = Backbone.Model.extend({
+    defaults:{
+        name: "None",
+        job:""
+    }
+});
