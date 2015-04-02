@@ -1,16 +1,42 @@
-(function ($){
-    var Model = Backbone.Model.extend({
+(function (){
+
+        window.App = {
+            View: {},
+            Model:{},
+            Collection:{},
+            Service:{}
+        };
+        window.template = function (id) {
+            //_.template($('#'+id).html());
+        }
+
+
+    App.Model.Model = Backbone.Model.extend({
         defaults:{
-            item1:'<img style="width: 100px; height: 100px" src="link.gif">',
-            item2:'gnom'
+            request:'',
+            response:''
         }
     });
 
-    var ModelList = Backbone.Collection.extend({
-        model: Model
+    App.Model.Location = Backbone.Model.extend({
+        defaults:{
+            fulltitle: '',
+            title: '',
+            lat: 0,
+            long: 0
+        }
     });
 
-    var ContentContainer = Backbone.View.extend({
+    App.Collection.ModelList = Backbone.Collection.extend({
+        model: App.Model.Model,
+        parse: function(resp, options){
+            console.log(resp);
+            modellist.add(resp);
+
+        }
+    });
+
+    App.View.ContentContainer = Backbone.View.extend({
         tagName: 'li',
 
         events: {
@@ -20,14 +46,14 @@
 
         initialize: function () {
             _.bindAll(this, 'render', 'unrender', 'swap', 'remove');
-
+            App.Service.Service('getSearch', '','');
             this.model.bind('change', this.render);
             this.model.bind('remove', this.unrender);
         },
 
         render: function () {
-           var template = _.template( $('#person-id').html() );
-            $(this.el).html(template(this.model.toJSON()));
+           //var template = _.template( $('#person-id').html() );
+           // $(this.el).html(template(this.model.toJSON()));
             return this;
         },
 
@@ -49,14 +75,14 @@
 
     });
 
-    var PostCreater = Backbone.View.extend({
+    App.View.PostCreator = Backbone.View.extend({
         tagName: 'div',
         events: {
             'click button#add': 'addItem'
         },
         initialize: function(){
             _.bindAll(this, 'render');
-            this.collection = new ModelList();
+            this.collection = new App.Collection.ModelList();
             this.collection.bind('add', this.appendItem);
             this.counter = 0;
             this.render();
@@ -73,7 +99,7 @@
 
         addItem: function () {
             this.counter++;
-            var model = new Model();
+            var model = new App.Model.Model();
             model.set({
                 item2: $('#send-text').val()
             });
@@ -81,7 +107,7 @@
         },
 
         appendItem: function (item) {
-            var container = new ContentContainer({
+            var container = new App.View.ContentContainer({
                 model: item
             });
 
@@ -89,12 +115,12 @@
         }
     });
 
-    var MapList = Backbone.View.extend({
+    App.View.MapList = Backbone.View.extend({
         el: $('body'),
 
         initialize: function () {
             _.bindAll(this, 'render');
-            this.collection = new ModelList();
+            this.collection = new App.Collection.ModelList();
             this.collection.bind('add', this.appendItem);
             this.counter = 0;
             this.render();
@@ -104,7 +130,7 @@
             var self = this;
             $(this.el).append('<div></div>');
             $(this.el).append('<ul></ul>');
-            $('div', this.el).html(postCreater.el);
+            $('div', this.el).html(postCreator.el);
             _(this.collection.models).each(function(item){
                 self.appendItem(item);
             }, this);
@@ -112,6 +138,35 @@
         }
 
     });
-    var postCreater = new PostCreater();
-    var mapList = new MapList();
+
+    App.Service.Service = function (serviceName, options, content) {
+        if (options.length === 0){
+            options = {
+                page: 1,
+                total_pages: 1,
+                search_name:''
+            }
+        }
+        var self = {
+              getSearch: function (content, options){
+              modellist.url =  "http://api.nestoria.co.uk/api?country=uk&pretty=1&action=search_listings&encoding=json&listing_type=buy&page=1&place_name=leeds";
+              modellist.fetch({
+                   success: function(){
+                    console.log(modellist);
+                   }
+               });
+
+           }
+        }
+        if(self[serviceName]) {
+            self[serviceName](content, options)
+        } else {
+            console.log('Olo-lo-lo!');
+        }
+
+    };
+
+    var modellist = new App.Collection.ModelList ();
+    var postCreator = new App.View.PostCreator();
+    var mapList = new App.View.MapList();
 })(jQuery);
